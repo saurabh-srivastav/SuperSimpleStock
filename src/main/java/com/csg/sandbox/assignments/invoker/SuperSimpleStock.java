@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,17 +40,22 @@ public class SuperSimpleStock {
 	 * 
 	 * @param args
 	 */
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		try {
-			@SuppressWarnings("resource")
+			
+			Scanner scannedVal = new Scanner(System.in);
+			logger.debug("Enter any Price (Double) to calculate dividend");
+			final Double tickerPrice = scannedVal.nextDouble();
+			logger.debug(String.format("Entered  Price value to calculate dividend is :: %s",tickerPrice));
+
 			ApplicationContext context = new AnnotationConfigApplicationContext(InMemoryDb.class);
 			@SuppressWarnings("unchecked")
 			final Map<String, StockDetails> dbMap = context.getBean("ExchangeDb", Map.class);
-			
+
 			for (StockDetails stock : dbMap.values()) {
-				final Double tickerPrice = 8.7;
-				//Total no of trade for eligible for 15 mins calculation
-				final int noOfEligibleTrade= 5;
+				// Total no of trade for eligible for 15 mins calculation
+				final int noOfEligibleTrade = 5;
 				Date bookingDate;
 				// print devidend for tickerPrice
 				logger.debug(stock.getStockSymbol() + String.format(" dividend:::: %s", stock.dividend(tickerPrice)));
@@ -58,27 +64,30 @@ public class SuperSimpleStock {
 				// Record some trades
 				logger.debug(" Recording 10 Trades :::: ");
 				for (int index = 1; index <= 10; index++) {
-					//BUY
+					// BUY
 					double randomValue = getRandomNumber();
-					
-					if(index<= noOfEligibleTrade){
+
+					if (index <= noOfEligibleTrade) {
 						bookingDate = new Date();
-					}else{
-						 final long SIXTY_MINUTE_IN_MILLIS = 60*60000;//millisecs
-						 bookingDate = addMinDate(SIXTY_MINUTE_IN_MILLIS);
+					} else {
+						final long SIXTY_MINUTE_IN_MILLIS = 60 * 60000;// millisecs
+						bookingDate = addMinDate(SIXTY_MINUTE_IN_MILLIS);
 					}
 					stock.buy(index, randomValue, bookingDate);
-					logger.debug(stock.getStockSymbol() + String.format(" bought %s shares at $ %s", index, randomValue));
+					logger.debug(
+							stock.getStockSymbol() + String.format(" bought %s shares at $ %s", index, randomValue));
 
-					//SELL
+					// SELL
 					randomValue = getRandomNumber();
-					stock.sell(index, randomValue , bookingDate );
+					stock.sell(index, randomValue, bookingDate);
 					logger.debug(stock.getStockSymbol() + String.format(" sold %s shares at $ %s", index, randomValue));
 					Thread.sleep(1000);
 				}
-				// Printing Volume Weighted Stock Price based on trades in past 15 minutes
-				logger.debug(stock.getStockSymbol() + String.format(" price: $%s", stock.getLastTradePrice()));
-				logger.debug(String.format(" volumeWeightedStockPrice:: $%s is for stock symbol ::%s", stock.calculateVolumeWeightedStockPrice(),stock.getStockSymbol()));
+				// Printing Volume Weighted Stock Price based on trades in past
+				// 15 minutes
+				logger.debug(stock.getStockSymbol() + String.format(" Latetst Trade price: $%s", stock.getLastTradePrice()));
+				logger.debug(String.format(" volumeWeightedStockPrice:: $%s is for stock symbol ::%s",
+						stock.calculateVolumeWeightedStockPrice(), stock.getStockSymbol()));
 			}
 			Double GBCEallShareIndex = GBCECalculator.allShareIndex(dbMap);
 			// Printing GBCE All Share Index
